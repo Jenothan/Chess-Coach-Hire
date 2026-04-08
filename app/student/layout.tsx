@@ -3,7 +3,7 @@
 import { ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Users, Calendar, Bell, HelpCircle, LogOut } from 'lucide-react';
+import { LayoutDashboard, Users, Calendar, Bell, HelpCircle, LogOut, Settings } from 'lucide-react';
 
 export default function StudentLayout({ children }: { children: ReactNode }) {
     const pathname = usePathname();
@@ -12,6 +12,7 @@ export default function StudentLayout({ children }: { children: ReactNode }) {
         { href: '/student', label: 'Dashboard', icon: LayoutDashboard },
         { href: '/student/coaches', label: 'Find Coaches', icon: Users },
         { href: '/student/bookings', label: 'My Bookings', icon: Calendar },
+        { href: '/student/settings', label: 'Settings', icon: Settings },
     ];
 
     return (

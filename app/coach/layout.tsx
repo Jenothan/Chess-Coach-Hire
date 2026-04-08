@@ -3,7 +3,7 @@
 import { ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Calendar, Bell, HelpCircle, LogOut } from 'lucide-react';
+import { LayoutDashboard, Calendar, Bell, HelpCircle, LogOut, Settings } from 'lucide-react';
 
 export default function CoachLayout({ children }: { children: ReactNode }) {
     const pathname = usePathname();
@@ -11,6 +11,7 @@ export default function CoachLayout({ children }: { children: ReactNode }) {
     const navItems = [
         { href: '/coach', label: 'Dashboard', icon: LayoutDashboard },
         { href: '/coach/schedule', label: 'Schedule', icon: Calendar },
+        { href: '/coach/settings', label: 'Settings', icon: Settings },
     ];
 
     return (

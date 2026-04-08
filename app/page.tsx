@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Crown, Users, Calendar, Star, TrendingUp, Shield, Moon, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,6 +8,11 @@ import { useTheme } from '@/lib/hooks/useTheme';
 
 export default function Home() {
     const { theme, toggleTheme } = useTheme();
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     return (
         <div className="min-h-screen bg-background">
@@ -22,8 +28,13 @@ export default function Home() {
                             <button
                                 onClick={toggleTheme}
                                 className="p-2 hover:bg-accent/20 rounded-lg transition-colors"
+                                aria-label="Toggle theme"
                             >
-                                {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                                {mounted ? (
+                                    theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />
+                                ) : (
+                                    <div className="w-5 h-5" /> // Placeholder to avoid layout shift
+                                )}
                             </button>
                             <Link href="/login">
                                 <Button variant="ghost">Login</Button>

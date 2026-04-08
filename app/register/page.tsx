@@ -8,9 +8,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 
+import { registerUser } from '@/lib/actions/authActions';
+import { toast } from 'sonner';
+
 export default function RegisterPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
+    const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -22,10 +26,29 @@ export default function RegisterPage() {
         (searchParams.get('role') as 'coach' | 'student') || 'student'
     );
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // Mock registration - redirect based on role
-        router.push(`/${role}`);
+
+        if (formData.password !== formData.confirmPassword) {
+            toast.error("Passwords do not match");
+            return;
+        }
+
+        setLoading(true);
+        const result = await registerUser({
+            name: formData.name,
+            email: formData.email,
+            password: formData.password,
+            role: role
+        });
+
+        if (result.success) {
+            toast.success("Account created successfully!");
+            router.push('/login');
+        } else {
+            toast.error(result.error || "Failed to register");
+        }
+        setLoading(false);
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -165,8 +188,8 @@ export default function RegisterPage() {
                                 </span>
                             </label>
 
-                            <Button type="submit" className="w-full">
-                                Create Account
+                            <Button type="submit" className="w-full" disabled={loading}>
+                                {loading ? 'Creating Account...' : 'Create Account'}
                             </Button>
 
                             <p className="text-center text-sm text-muted-foreground">

@@ -1,79 +1,79 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Calendar, DollarSign, Users, Star, CheckCircle, XCircle } from 'lucide-react';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-
-const earningsData = [
-    { month: 'Jan', earnings: 3200 },
-    { month: 'Feb', earnings: 3800 },
-    { month: 'Mar', earnings: 3500 },
-    { month: 'Apr', earnings: 4200 },
-    { month: 'May', earnings: 4500 },
-    { month: 'Jun', earnings: 4800 },
-];
-
-const upcomingLessons = [
-    { id: 1, student: 'David Lee', time: '10:00 AM', date: '2026-02-15', duration: '60 min', status: 'confirmed' },
-    { id: 2, student: 'Emma Wilson', time: '2:00 PM', date: '2026-02-15', duration: '60 min', status: 'confirmed' },
-    { id: 3, student: 'Michael Brown', time: '4:00 PM', date: '2026-02-15', duration: '90 min', status: 'confirmed' },
-    { id: 4, student: 'Sophie Chen', time: '11:00 AM', date: '2026-02-16', duration: '60 min', status: 'pending' },
-];
-
-const pendingRequests = [
-    { id: 1, student: 'Alex Johnson', type: 'Single Lesson', date: '2026-02-18', time: '3:00 PM', amount: '$50' },
-    { id: 2, student: 'Lisa Wang', type: 'Monthly Plan', date: '2026-02-20', time: '10:00 AM', amount: '$400' },
-    { id: 3, student: 'James Miller', type: 'Single Lesson', date: '2026-02-22', time: '1:00 PM', amount: '$50' },
-];
+import { getCoachDashboardData } from '@/lib/actions/coachActions';
 
 export default function CoachDashboard() {
     const [selectedTab, setSelectedTab] = useState<'upcoming' | 'requests'>('upcoming');
+    const [data, setData] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+
+    // Hardcoded coach ID for now - in a real app, this would come from the logged-in user
+    const coachId = 'coach_alex_123';
+
+    useEffect(() => {
+        async function fetchData() {
+            setLoading(true);
+            const result = await getCoachDashboardData(coachId);
+            if (result.success) {
+                setData(result.data);
+            }
+            setLoading(false);
+        }
+        fetchData();
+    }, [coachId]);
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <p className="text-xl text-muted-foreground animate-pulse">Loading dashboard data...</p>
+            </div>
+        );
+    }
+
+    if (!data) {
+        return (
+            <div className="text-center py-20">
+                <p className="text-xl text-destructive">Error loading dashboard. Please try again.</p>
+            </div>
+        );
+    }
+
+    const { stats, upcomingLessons, pendingRequests } = data;
+
+    // Example chart data - in a real app, this would also come from the database
+    const earningsData = [
+        { month: 'Current', earnings: stats.monthlyEarnings },
+    ];
 
     return (
         <div className="space-y-8">
-            {/* Header */}
             <div className="flex justify-between items-start">
                 <div>
-                    <h1 className="mb-2">Welcome back, Coach!</h1>
+                    <h1 className="mb-2 text-3xl font-bold tracking-tight">Welcome back!</h1>
                     <p className="text-muted-foreground">Manage your schedule and students</p>
                 </div>
                 <Button variant="accent">Set Availability</Button>
             </div>
 
-            {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {[
-                    { icon: Users, label: 'Active Students', value: '24', color: 'text-blue-500' },
-                    { icon: Calendar, label: 'This Week Lessons', value: '18', color: 'text-green-500' },
-                    { icon: DollarSign, label: 'This Month Earnings', value: '$4,800', color: 'text-accent' },
-                    { icon: Star, label: 'Average Rating', value: '4.9', color: 'text-yellow-500' },
-                ].map((stat, index) => (
-                    <Card key={index}>
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm text-muted-foreground mb-1">{stat.label}</p>
-                                    <p className="text-2xl font-bold">{stat.value}</p>
-                                </div>
-                                <div className={`p-3 rounded-full bg-accent/10 ${stat.color}`}>
-                                    <stat.icon className="w-6 h-6" />
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                ))}
+                <StatCard icon={Users} label="Active Students" value={stats.activeStudents.toString()} color="text-blue-500" />
+                <StatCard icon={Calendar} label="Upcoming Lessons" value={stats.weeklyLessons.toString()} color="text-green-500" />
+                <StatCard icon={DollarSign} label="Total Earnings" value={`$${stats.monthlyEarnings}`} color="text-accent" />
+                <StatCard icon={Star} label="Average Rating" value={stats.rating.toString()} color="text-yellow-500" />
             </div>
 
-            {/* Earnings Chart */}
             <Card>
                 <CardHeader>
-                    <h3>Monthly Earnings</h3>
-                    <p className="text-sm text-muted-foreground">Your earnings trend over time</p>
+                    <h3 className="text-lg font-semibold">Earnings Summary</h3>
+                    <p className="text-sm text-muted-foreground">Your earnings trend from confirmed bookings</p>
                 </CardHeader>
                 <CardContent>
-                    <ResponsiveContainer width="100%" height={300}>
+                    <ResponsiveContainer width="100%" height={200}>
                         <BarChart data={earningsData}>
                             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                             <XAxis dataKey="month" stroke="var(--muted-foreground)" />
@@ -85,18 +85,17 @@ export default function CoachDashboard() {
                                     borderRadius: '8px'
                                 }}
                             />
-                            <Bar dataKey="earnings" fill="#D4AF37" radius={[8, 8, 0, 0]} />
+                            <Bar dataKey="earnings" fill="var(--accent)" radius={[8, 8, 0, 0]} />
                         </BarChart>
                     </ResponsiveContainer>
                 </CardContent>
             </Card>
 
-            {/* Schedule Section */}
             <Card>
                 <CardHeader>
                     <div className="flex items-center justify-between">
                         <div>
-                            <h3>{selectedTab === 'upcoming' ? 'Upcoming Lessons' : 'Booking Requests'}</h3>
+                            <h3 className="text-lg font-semibold">{selectedTab === 'upcoming' ? 'Upcoming Lessons' : 'Booking Requests'}</h3>
                             <p className="text-sm text-muted-foreground">
                                 {selectedTab === 'upcoming' ? 'Your scheduled lessons' : 'Pending approval'}
                             </p>
@@ -114,7 +113,7 @@ export default function CoachDashboard() {
                                 size="sm"
                                 onClick={() => setSelectedTab('requests')}
                             >
-                                Requests (3)
+                                Requests ({pendingRequests.length})
                             </Button>
                         </div>
                     </div>
@@ -122,41 +121,40 @@ export default function CoachDashboard() {
                 <CardContent>
                     {selectedTab === 'upcoming' ? (
                         <div className="space-y-3">
-                            {upcomingLessons.map((lesson) => (
+                            {upcomingLessons.length > 0 ? upcomingLessons.map((lesson: any) => (
                                 <div key={lesson.id} className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-accent/5 transition-colors">
                                     <div className="flex items-center gap-4">
                                         <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center">
                                             <Calendar className="w-6 h-6 text-accent" />
                                         </div>
                                         <div>
-                                            <p className="font-semibold">{lesson.student}</p>
+                                            <p className="font-semibold">{lesson.student.user.name}</p>
                                             <p className="text-sm text-muted-foreground">
-                                                {lesson.date} at {lesson.time} • {lesson.duration}
+                                                {new Date(lesson.date).toLocaleDateString()} at {lesson.time} • {lesson.duration} min
                                             </p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <span className={`text-sm px-3 py-1 rounded-full ${lesson.status === 'confirmed'
-                                            ? 'bg-green-500/10 text-green-600'
-                                            : 'bg-yellow-500/10 text-yellow-600'
-                                            }`}>
+                                        <span className="text-sm px-3 py-1 rounded-full bg-green-500/10 text-green-600">
                                             {lesson.status}
                                         </span>
                                         <Button variant="outline" size="sm">Join</Button>
                                     </div>
                                 </div>
-                            ))}
+                            )) : (
+                                <p className="text-center py-10 text-muted-foreground">No upcoming lessons.</p>
+                            )}
                         </div>
                     ) : (
                         <div className="space-y-3">
-                            {pendingRequests.map((request) => (
+                            {pendingRequests.length > 0 ? pendingRequests.map((request: any) => (
                                 <div key={request.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
                                     <div>
-                                        <p className="font-semibold">{request.student}</p>
+                                        <p className="font-semibold">{request.student.user.name}</p>
                                         <p className="text-sm text-muted-foreground">
-                                            {request.type} • {request.date} at {request.time}
+                                            {request.type || 'Single Lesson'} • {new Date(request.date).toLocaleDateString()} at {request.time}
                                         </p>
-                                        <p className="text-sm font-semibold text-accent mt-1">{request.amount}</p>
+                                        <p className="text-sm font-semibold text-accent mt-1">${request.amount}</p>
                                     </div>
                                     <div className="flex gap-2">
                                         <Button variant="accent" size="sm">
@@ -169,11 +167,31 @@ export default function CoachDashboard() {
                                         </Button>
                                     </div>
                                 </div>
-                            ))}
+                            )) : (
+                                <p className="text-center py-10 text-muted-foreground">No pending requests.</p>
+                            )}
                         </div>
                     )}
                 </CardContent>
             </Card>
         </div>
+    );
+}
+
+function StatCard({ icon: Icon, label, value, color }: any) {
+    return (
+        <Card>
+            <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <p className="text-sm text-muted-foreground mb-1">{label}</p>
+                        <p className="text-2xl font-bold">{value}</p>
+                    </div>
+                    <div className={`p-3 rounded-full bg-accent/10 ${color}`}>
+                        <Icon className="w-6 h-6" />
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
     );
 }

@@ -7,17 +7,30 @@ import { Crown, Mail, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
+import { loginUser } from '@/lib/actions/authActions';
+import { toast } from 'sonner';
 
 export default function LoginPage() {
     const router = useRouter();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [role, setRole] = useState<'admin' | 'coach' | 'student'>('student');
+    const [loading, setLoading] = useState(false);
 
-    const handleLogin = (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-        // Mock login - redirect based on role
-        router.push(`/${role}`);
+        setLoading(true);
+
+        const result = await loginUser({ email, password });
+
+        if (result.success && result.data) {
+            toast.success("Logged in successfully!");
+            // Use the role from the database user
+            const userRole = result.data.role.toLowerCase();
+            router.push(`/${userRole}`);
+        } else {
+            toast.error(result.error || "Invalid credentials");
+        }
+        setLoading(false);
     };
 
     return (
@@ -30,82 +43,62 @@ export default function LoginPage() {
 
                 <Card>
                     <CardHeader>
-                        <h2 className="text-center mb-2">Welcome Back</h2>
+                        <h2 className="text-center mb-2 text-2xl font-bold">Welcome Back</h2>
                         <p className="text-center text-muted-foreground text-sm">
                             Sign in to your account to continue
                         </p>
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={handleLogin} className="space-y-4">
-                            <div>
-                                <label className="block text-sm mb-2">Login As</label>
-                                <div className="grid grid-cols-3 gap-2">
-                                    {['student', 'coach', 'admin'].map((r) => (
-                                        <button
-                                            key={r}
-                                            type="button"
-                                            onClick={() => {
-                                                console.log('Selected role:', r);
-                                                setRole(r as typeof role);
-                                            }}
-                                            className={`px-4 py-2 rounded-lg border-2 capitalize transition-colors cursor-pointer select-none ${role === r
-                                                ? 'border-accent bg-accent text-accent-foreground shadow-sm'
-                                                : 'border-border bg-transparent hover:border-accent/50 hover:bg-accent/10'
-                                                }`}
-                                        >
-                                            {r}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
 
-                            <div>
-                                <label className="block text-sm mb-2">Email</label>
+
+                            <div className="space-y-2">
+                                <label className="block text-sm font-medium text-foreground">Email</label>
                                 <div className="relative">
-                                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                                     <Input
                                         type="email"
                                         placeholder="your@email.com"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
-                                        className="pl-10"
+                                        className="pl-10 h-10"
                                         required
                                     />
                                 </div>
                             </div>
 
-                            <div>
-                                <label className="block text-sm mb-2">Password</label>
+                            <div className="space-y-2">
+                                <label className="block text-sm font-medium text-foreground">Password</label>
                                 <div className="relative">
-                                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                                     <Input
                                         type="password"
                                         placeholder="••••••••"
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
-                                        className="pl-10"
+                                        className="pl-10 h-10"
                                         required
                                     />
                                 </div>
                             </div>
 
-                            <div className="flex items-center justify-between text-sm">
-                                <label className="flex items-center gap-2">
-                                    <input type="checkbox" className="rounded" />
-                                    <span>Remember me</span>
+                            <div className="flex items-center justify-between text-xs">
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" className="rounded border-border" />
+                                    <span className="text-muted-foreground">Remember me</span>
                                 </label>
-                                <Link href="/forgot-password" className="text-accent hover:underline">
+                                <Link href="/forgot-password" className="text-accent hover:underline font-medium">
                                     Forgot password?
                                 </Link>
                             </div>
 
-                            <Button type="submit" className="w-full">
-                                Sign In
+                            <Button type="submit" className="w-full h-10" disabled={loading}>
+                                {loading ? 'Signing In...' : 'Sign In'}
                             </Button>
 
-                            <p className="text-center text-sm text-muted-foreground">
+                            <p className="text-center text-xs text-muted-foreground pt-2">
                                 Don&apos;t have an account?{' '}
-                                <Link href="/register" className="text-accent hover:underline">
+                                <Link href="/register" className="text-accent hover:underline font-semibold">
                                     Sign up
                                 </Link>
                             </p>
@@ -113,6 +106,6 @@ export default function LoginPage() {
                     </CardContent>
                 </Card>
             </div>
-        </div>
+        </div >
     );
 }

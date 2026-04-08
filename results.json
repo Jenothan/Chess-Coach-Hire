@@ -1,0 +1,27 @@
+[
+  {
+    "name": "Grandmaster Alex",
+    "email": "alex@example.com",
+    "role": "COACH"
+  },
+  {
+    "name": "Sarah Jones",
+    "email": "sarah@example.com",
+    "role": "COACH"
+  },
+  {
+    "name": "Test Student",
+    "email": "student@test.com",
+    "role": "STUDENT"
+  },
+  {
+    "name": "",
+    "email": "",
+    "role": "STUDENT"
+  },
+  {
+    "name": "Esan Jenothan",
+    "email": "esanjenothan@gmail.com",
+    "role": "COACH"
+  }
+]
