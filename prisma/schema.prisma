@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["driverAdapters"]
@@ -14,44 +8,36 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime?
-  image         String?
-  password      String?
-  role          Role      @default(STUDENT)
-  
+  id             String         @id @default(cuid())
+  name           String?
+  email          String?        @unique
+  emailVerified  DateTime?
+  image          String?
+  role           Role           @default(STUDENT)
+  password       String?
   coachProfile   Coach?
-  studentProfile Student?
   notifications  Notification[]
+  studentProfile Student?
 }
 
 model Notification {
   id        String   @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  type      String   // e.g., "BOOKING_REQUEST", "BOOKING_ACCEPTED", "BOOKING_REJECTED"
+  type      String
   message   String
   isRead    Boolean  @default(false)
-  link      String?  // Optional link to navigate to
+  link      String?
   createdAt DateTime @default(now())
-}
-
-enum Role {
-  ADMIN
-  COACH
-  STUDENT
+  user      User     @relation(fields: [userId], references: [id])
 }
 
 model Coach {
-  id           String   @id @default(cuid())
-  userId       String   @unique
-  user         User     @relation(fields: [userId], references: [id])
+  id           String             @id @default(cuid())
+  userId       String             @unique
   title        String
   rating       Int
-  stars        Float    @default(0)
-  reviewsCount Int      @default(0)
+  stars        Float              @default(0)
+  reviewsCount Int                @default(0)
   location     String
   languages    String[]
   hourlyRate   Float
@@ -60,40 +46,37 @@ model Coach {
   experience   String
   bio          String?
   avatar       String?
-  status       String   @default("PENDING")
-  
+  status       String             @default("PENDING")
   slots        AvailabilitySlot[]
   bookings     Booking[]
+  user         User               @relation(fields: [userId], references: [id])
 }
 
 model AvailabilitySlot {
   id        String   @id @default(cuid())
   coachId   String
-  coach     Coach    @relation(fields: [coachId], references: [id])
-  day       String   // e.g., "Monday"
-  startTime String   // e.g., "09:00"
-  endTime   String   // e.g., "10:00"
+  day       String
+  startTime String
+  endTime   String
   isBusy    Boolean  @default(false)
   createdAt DateTime @default(now())
+  coach     Coach    @relation(fields: [coachId], references: [id])
 }
 
 model Student {
-  id               String   @id @default(cuid())
-  userId           String   @unique
-  user             User     @relation(fields: [userId], references: [id])
-  rating           Int      @default(1200)
-  lessonsCompleted Int      @default(0)
-  joinedDate       DateTime @default(now())
-  
+  id               String    @id @default(cuid())
+  userId           String    @unique
+  rating           Int       @default(1200)
+  lessonsCompleted Int       @default(0)
+  joinedDate       DateTime  @default(now())
   bookings         Booking[]
+  user             User      @relation(fields: [userId], references: [id])
 }
 
 model Booking {
   id        String   @id @default(cuid())
   studentId String
-  student   Student  @relation(fields: [studentId], references: [id])
   coachId   String
-  coach     Coach    @relation(fields: [coachId], references: [id])
   date      DateTime
   time      String
   duration  Int
@@ -101,4 +84,12 @@ model Booking {
   amount    Float
   status    String   @default("pending")
   createdAt DateTime @default(now())
+  coach     Coach    @relation(fields: [coachId], references: [id])
+  student   Student  @relation(fields: [studentId], references: [id])
+}
+
+enum Role {
+  ADMIN
+  COACH
+  STUDENT
 }
