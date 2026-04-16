@@ -1,4 +1,4 @@
-'use client';
+"use client"
 
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -10,8 +10,9 @@ import { Card, CardHeader, CardContent } from '@/components/ui/card';
 
 import { registerUser } from '@/lib/actions/authActions';
 import { toast } from 'sonner';
+import { Suspense } from 'react';
 
-export default function RegisterPage() {
+function RegisterForm() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [loading, setLoading] = useState(false);
@@ -203,5 +204,13 @@ export default function RegisterPage() {
                 </Card>
             </div>
         </div>
+    );
+}
+
+export default function RegisterPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+            <RegisterForm />
+        </Suspense>
     );
 }
