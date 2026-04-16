@@ -12,19 +12,21 @@ export default function StudentDashboard() {
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
 
-    // Hardcoded student ID for now
-    const studentId = 'student_dummy_id';
-
     useEffect(() => {
+        const userId = localStorage.getItem('userId');
+        if (!userId) {
+            setLoading(false);
+            return;
+        }
+
         async function fetchData() {
             setLoading(true);
-            const result = await getStudentDashboardData(studentId);
+            const result = await getStudentDashboardData(userId!);
             if (result.success) {
                 setData(result.data);
             } else {
-                // If student not found, we'll just show empty state for now
                 setData({
-                    stats: { rating: 1200, totalLessons: 0, activeCoaches: 0, hoursLearned: 0 },
+                    stats: { rating: 0, totalLessons: 0, activeCoaches: 0, hoursLearned: 0 },
                     upcomingLessons: [],
                     myCoaches: []
                 });
@@ -126,7 +128,6 @@ export default function StudentDashboard() {
                                                 <span className="text-sm font-semibold">{lesson.coach.rating}</span>
                                             </div>
                                         </div>
-                                        <Button variant="accent" size="sm">Join</Button>
                                     </div>
                                 </div>
                             )) : (

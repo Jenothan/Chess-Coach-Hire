@@ -7,49 +7,41 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calendar, Clock, Video, FileText, ChevronRight, User } from 'lucide-react';
 import { format } from 'date-fns';
 
-// Mock data for bookings
-const allBookings = [
-    {
-        id: 1,
-        coach: 'Grandmaster Alex',
-        date: new Date(new Date().setHours(10, 0, 0, 0)),
-        duration: 60,
-        status: 'Confirmed',
-        topic: 'Opening Repertoire',
-        link: 'https://meet.google.com/abc-def-ghi',
-    },
-    {
-        id: 2,
-        coach: 'Sarah Jones',
-        date: new Date(new Date().setDate(new Date().getDate() + 2)),
-        duration: 90,
-        status: 'Pending',
-        topic: 'Middle Game Tactics',
-        link: '',
-    },
-    {
-        id: 3,
-        coach: 'David Chen',
-        date: new Date(new Date().setDate(new Date().getDate() - 5)),
-        duration: 45,
-        status: 'Completed',
-        topic: 'Endgame Fundamentals',
-        link: '',
-    },
-    {
-        id: 4,
-        coach: 'Elena Petrova',
-        date: new Date(new Date().setDate(new Date().getDate() - 12)),
-        duration: 60,
-        status: 'Completed',
-        topic: 'Attacking Principles',
-        link: '',
-    }
-];
+import { useState, useEffect } from 'react';
+import { getStudentBookings } from '@/lib/actions/coachActions';
 
 export default function StudentBookingsPage() {
-    const upcomingBookings = allBookings.filter(b => b.status === 'Confirmed' || b.status === 'Pending');
-    const pastBookings = allBookings.filter(b => b.status === 'Completed' || b.status === 'Cancelled');
+    const [bookings, setBookings] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const userId = localStorage.getItem('userId');
+        if (!userId) {
+            setLoading(false);
+            return;
+        }
+
+        async function fetchData() {
+            setLoading(true);
+            const result = await getStudentBookings(userId!);
+            if (result.success) {
+                setBookings(result.data || []);
+            }
+            setLoading(false);
+        }
+        fetchData();
+    }, []);
+
+    const upcomingBookings = bookings.filter(b => b.status === 'Confirmed' || b.status === 'Pending');
+    const pastBookings = bookings.filter(b => b.status === 'Completed' || b.status === 'Cancelled');
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <p className="text-xl text-muted-foreground animate-pulse">Loading bookings...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6">
@@ -124,6 +116,9 @@ function BookingCard({ booking, isUpcoming }: { booking: any, isUpcoming: boolea
                                 <div className="flex items-center gap-1">
                                     <Clock className="w-4 h-4" />
                                     {format(booking.date, 'h:mm a')} ({booking.duration} min)
+                                </div>
+                                <div className="flex items-center gap-1 font-semibold text-emerald-600">
+                                    LKR {booking.amount}
                                 </div>
                             </div>
                         </div>

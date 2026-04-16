@@ -71,7 +71,11 @@ export async function loginUser(data: any) {
 
         // 1. Find the user
         const user = await prisma.user.findUnique({
-            where: { email }
+            where: { email },
+            include: {
+                coachProfile: true,
+                studentProfile: true,
+            }
         });
 
         if (!user) {

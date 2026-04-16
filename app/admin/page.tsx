@@ -73,7 +73,7 @@ export default function AdminDashboard() {
                     { icon: Users, label: 'Total Coaches', value: data.stats.totalCoaches.toString(), change: '+12', color: 'text-blue-500' },
                     { icon: UserCheck, label: 'Total Students', value: data.stats.totalStudents.toString(), change: '+234', color: 'text-green-500' },
                     { icon: Calendar, label: 'Total Bookings', value: data.stats.totalBookings.toString(), change: '+89', color: 'text-purple-500' },
-                    { icon: DollarSign, label: 'Revenue (MTD)', value: `$${data.stats.revenueMTD.toFixed(2)}`, change: '+18%', color: 'text-accent' },
+                    { icon: DollarSign, label: 'Revenue (MTD)', value: `LKR ${data.stats.revenueMTD.toFixed(2)}`, change: '+18%', color: 'text-accent' },
                 ].map((stat, index) => (
                     <Card key={index}>
                         <CardContent className="p-6">

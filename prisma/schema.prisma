@@ -11,7 +11,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -25,6 +24,18 @@ model User {
   
   coachProfile   Coach?
   studentProfile Student?
+  notifications  Notification[]
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  type      String   // e.g., "BOOKING_REQUEST", "BOOKING_ACCEPTED", "BOOKING_REJECTED"
+  message   String
+  isRead    Boolean  @default(false)
+  link      String?  // Optional link to navigate to
+  createdAt DateTime @default(now())
 }
 
 enum Role {
@@ -49,10 +60,21 @@ model Coach {
   experience   String
   bio          String?
   avatar       String?
-  availability String   @default("Available")
   status       String   @default("PENDING")
   
+  slots        AvailabilitySlot[]
   bookings     Booking[]
+}
+
+model AvailabilitySlot {
+  id        String   @id @default(cuid())
+  coachId   String
+  coach     Coach    @relation(fields: [coachId], references: [id])
+  day       String   // e.g., "Monday"
+  startTime String   // e.g., "09:00"
+  endTime   String   // e.g., "10:00"
+  isBusy    Boolean  @default(false)
+  createdAt DateTime @default(now())
 }
 
 model Student {

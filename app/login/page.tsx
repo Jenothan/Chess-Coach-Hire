@@ -31,6 +31,19 @@ export default function LoginPage() {
 
             // Use the role from the database user
             const userRole = result.data.role.toLowerCase();
+
+            // If coach, check status
+            if (userRole === 'coach' && result.data.coachProfile) {
+                const status = result.data.coachProfile.status;
+                if (status && status.toUpperCase() !== 'ACTIVE') {
+                    toast.error("Your coach account is still pending verification. Please wait for approval.");
+                    setLoading(false);
+                    return;
+                }
+                // Store actual coach profile ID for easier access in dashboards
+                localStorage.setItem('coachId', result.data.coachProfile.id);
+            }
+
             router.push(`/${userRole}`);
         } else {
             toast.error(result.error || "Invalid credentials");

@@ -82,10 +82,10 @@ export default function AdminBookingsPage() {
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Total Revenue (All Time)</CardTitle>
-                        <span className="text-muted-foreground">$</span>
+                        <span className="text-muted-foreground text-xs font-bold">LKR</span>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">${totalRevenue.toLocaleString()}</div>
+                        <div className="text-2xl font-bold">LKR {totalRevenue.toLocaleString()}</div>
                         <p className="text-xs text-muted-foreground">Calculated from all bookings</p>
                     </CardContent>
                 </Card>
@@ -167,7 +167,7 @@ export default function AdminBookingsPage() {
                                             </TableCell>
                                             <TableCell>{booking.duration} min</TableCell>
                                             <TableCell>{getStatusBadge(booking.status)}</TableCell>
-                                            <TableCell className="text-right font-medium">${booking.amount}</TableCell>
+                                            <TableCell className="text-right font-medium">LKR {booking.amount}</TableCell>
                                         </TableRow>
                                     ))
                                 ) : (

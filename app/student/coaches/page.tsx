@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -30,18 +31,24 @@ export default function FindCoachesPage() {
             const result = await getAllCoaches();
             if (result.success && result.data) {
                 // We format the database data to match what the UI expects
-                const formattedCoaches = result.data.map((c: any) => ({
-                    id: c.id,
-                    name: c.user.name || 'Anonymous',
-                    title: c.title,
-                    rating: c.rating,
-                    hourlyRate: c.hourlyRate,
-                    specialty: c.specialties[0] || 'General',
-                    bio: c.bio || 'No bio available.',
-                    imageUrl: c.avatar || '/placeholder-user.jpg',
-                    availability: c.availability,
-                    languages: c.languages,
-                }));
+                const formattedCoaches = result.data.map((c: any) => {
+                    const freeSlots = c.slots?.filter((s: any) => !s.isBusy)?.length || 0;
+                    const availabilityText = freeSlots > 0 ? `${freeSlots} Slots Available` : 'Fully Booked';
+
+                    return {
+                        id: c.id,
+                        name: c.user.name || 'Anonymous',
+                        title: c.title,
+                        stars: c.stars,
+                        rating: c.rating,
+                        hourlyRate: c.hourlyRate,
+                        specialty: c.specialties[0] || 'General',
+                        bio: c.bio || 'No bio available.',
+                        imageUrl: c.avatar || '/placeholder-user.jpg',
+                        availability: availabilityText,
+                        languages: c.languages,
+                    };
+                });
                 setCoaches(formattedCoaches);
             }
             setLoading(false);
@@ -104,7 +111,6 @@ export default function FindCoachesPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filteredCoaches.map((coach) => (
                         <Card key={coach.id} className="overflow-hidden flex flex-col hover:shadow-lg transition-shadow duration-300">
-                            <div className="h-2 bg-primary/80" />
                             <CardHeader className="pb-4">
                                 <div className="flex justify-between items-start">
                                     <div className="flex gap-4">
@@ -116,10 +122,6 @@ export default function FindCoachesPage() {
                                             <CardTitle className="text-lg">{coach.name}</CardTitle>
                                             <p className="text-sm text-primary font-medium">{coach.title}</p>
                                         </div>
-                                    </div>
-                                    <div className="flex items-center text-yellow-500">
-                                        <Star className="w-4 h-4 fill-current" />
-                                        <span className="ml-1 text-sm font-bold text-foreground">{coach.rating}</span>
                                     </div>
                                 </div>
                             </CardHeader>
@@ -134,8 +136,13 @@ export default function FindCoachesPage() {
                                         <span className="ml-1 font-medium">{coach.specialty}</span>
                                     </div>
                                     <div className="flex items-center text-sm">
+                                        <Star className="w-4 h-4 mr-2 text-primary" />
+                                        <span className="text-muted-foreground">Rating: </span>
+                                        <span className="ml-1 font-medium">{coach.rating}</span>
+                                    </div>
+                                    <div className="flex items-center text-sm">
                                         <Clock className="w-4 h-4 mr-2 text-primary" />
-                                        <span className={coach.availability === 'Available Today' ? 'text-green-600 font-medium' : 'text-muted-foreground'}>
+                                        <span className={coach.availability.includes('Available') ? 'text-green-600 font-medium' : 'text-red-500 font-medium'}>
                                             {coach.availability}
                                         </span>
                                     </div>
@@ -150,10 +157,12 @@ export default function FindCoachesPage() {
                             </CardContent>
                             <CardFooter className="pt-4 border-t bg-muted/20 flex items-center justify-between">
                                 <div>
-                                    <span className="text-2xl font-bold">${coach.hourlyRate}</span>
+                                    <span className="text-2xl font-bold">LKR {coach.hourlyRate}</span>
                                     <span className="text-sm text-muted-foreground">/hr</span>
                                 </div>
-                                <Button>Book Lesson</Button>
+                                <Link href={`/student/booking/${coach.id}`}>
+                                    <Button>Book Lesson</Button>
+                                </Link>
                             </CardFooter>
                         </Card>
                     ))}

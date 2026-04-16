@@ -217,7 +217,7 @@ export default function CoachSettingsPage() {
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <label className="text-sm font-medium">Hourly Rate ($)</label>
+                                        <label className="text-sm font-medium">Hourly Rate (LKR)</label>
                                         <Input type="number" value={hourlyRate} onChange={(e) => setHourlyRate(e.target.value)} required />
                                     </div>
                                     <div className="space-y-2">

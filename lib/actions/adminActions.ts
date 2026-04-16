@@ -131,9 +131,30 @@ export async function updateCoachStatus(coachId: string, status: string) {
         });
         revalidatePath("/admin");
         revalidatePath("/admin/coaches");
+        revalidatePath("/coach");
         return { success: true };
     } catch (error) {
         console.error("Error updating coach status:", error);
         return { success: false, error: "Failed to update coach status" };
+    }
+}
+
+export async function getStudentsData() {
+    try {
+        const students = await prisma.student.findMany({
+            include: { user: true }
+        });
+
+        return students.map((s: any) => ({
+            id: s.id,
+            name: s.user?.name || 'Unknown',
+            email: s.user?.email || 'N/A',
+            rating: s.rating,
+            lessonsCompleted: s.lessonsCompleted,
+            joinedDate: s.joinedDate.toISOString(),
+        }));
+    } catch (error) {
+        console.error("Error fetching students data:", error);
+        throw new Error("Failed to fetch students");
     }
 }
