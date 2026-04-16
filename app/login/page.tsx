@@ -24,6 +24,11 @@ export default function LoginPage() {
 
         if (result.success && result.data) {
             toast.success("Logged in successfully!");
+
+            // Store user info in localStorage for simple session management
+            localStorage.setItem('userId', result.data.id);
+            localStorage.setItem('userRole', result.data.role.toLowerCase());
+
             // Use the role from the database user
             const userRole = result.data.role.toLowerCase();
             router.push(`/${userRole}`);

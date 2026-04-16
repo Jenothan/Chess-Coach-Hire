@@ -31,7 +31,14 @@ export default function CoachSettingsPage() {
     const imageInputRef = useRef<HTMLInputElement>(null);
 
     // For demo/simulated session (should be getting from auth context in real app)
-    const userId = 'clv_alex_123'; // Should be dynamic
+    const [userId, setUserId] = useState<string>('clv_alex_123'); // Should be dynamic
+
+    useEffect(() => {
+        const storedUserId = localStorage.getItem('userId');
+        if (storedUserId) {
+            setUserId(storedUserId);
+        }
+    }, []);
 
     useEffect(() => {
         async function loadProfile() {

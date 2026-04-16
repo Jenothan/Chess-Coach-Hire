@@ -1,9 +1,11 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Users, UserCheck, Calendar, DollarSign } from 'lucide-react';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { getAdminDashboardData, updateCoachStatus } from '@/lib/actions/adminActions';
 
 const monthlyData = [
     { month: 'Jan', revenue: 45000, bookings: 320 },
@@ -14,27 +16,49 @@ const monthlyData = [
     { month: 'Jun', revenue: 65000, bookings: 450 },
 ];
 
-const coachData = [
-    { name: 'Active', value: 234, color: '#D4AF37' },
-    { name: 'Pending', value: 45, color: '#FFA500' },
-    { name: 'Suspended', value: 12, color: '#FF4444' },
-];
-
-const recentCoaches = [
-    { id: 1, name: 'GM Alexander Petrov', rating: 2650, status: 'pending', date: '2026-02-10' },
-    { id: 2, name: 'IM Maria Silva', rating: 2450, status: 'pending', date: '2026-02-11' },
-    { id: 3, name: 'FM John Smith', rating: 2350, status: 'approved', date: '2026-02-11' },
-    { id: 4, name: 'CM Sarah Johnson', rating: 2200, status: 'pending', date: '2026-02-12' },
-];
-
-const recentBookings = [
-    { id: 1, student: 'David Lee', coach: 'GM Alexander', date: '2026-02-15', amount: '$50', status: 'confirmed' },
-    { id: 2, student: 'Emma Wilson', coach: 'IM Maria Silva', date: '2026-02-15', amount: '$45', status: 'confirmed' },
-    { id: 3, student: 'Michael Brown', coach: 'FM John Smith', date: '2026-02-16', amount: '$40', status: 'pending' },
-    { id: 4, student: 'Sophie Chen', coach: 'CM Sarah Johnson', date: '2026-02-16', amount: '$35', status: 'confirmed' },
-];
-
 export default function AdminDashboard() {
+    const [data, setData] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        async function fetchData() {
+            try {
+                const dashboardData = await getAdminDashboardData();
+                setData(dashboardData);
+            } catch (error) {
+                console.error("Failed to fetch dashboard data:", error);
+            } finally {
+                setLoading(false);
+            }
+        }
+        fetchData();
+    }, []);
+
+    const handleApprove = async (coachId: string) => {
+        const result = await updateCoachStatus(coachId, 'ACTIVE');
+        if (result.success) {
+            // Refresh local data or refetch
+            const dashboardData = await getAdminDashboardData();
+            setData(dashboardData);
+        }
+    };
+
+    const handleReject = async (coachId: string) => {
+        const result = await updateCoachStatus(coachId, 'REJECTED'); // Or deleted
+        if (result.success) {
+            const dashboardData = await getAdminDashboardData();
+            setData(dashboardData);
+        }
+    };
+
+    if (loading) {
+        return <div className="flex items-center justify-center min-h-[400px]">Loading dashboard...</div>;
+    }
+
+    if (!data) {
+        return <div>Error loading dashboard data.</div>;
+    }
+
     return (
         <div className="space-y-8">
             {/* Header */}
@@ -46,10 +70,10 @@ export default function AdminDashboard() {
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[
-                    { icon: Users, label: 'Total Coaches', value: '291', change: '+12', color: 'text-blue-500' },
-                    { icon: UserCheck, label: 'Total Students', value: '3,847', change: '+234', color: 'text-green-500' },
-                    { icon: Calendar, label: 'Total Bookings', value: '12,450', change: '+89', color: 'text-purple-500' },
-                    { icon: DollarSign, label: 'Revenue (MTD)', value: '$65,420', change: '+18%', color: 'text-accent' },
+                    { icon: Users, label: 'Total Coaches', value: data.stats.totalCoaches.toString(), change: '+12', color: 'text-blue-500' },
+                    { icon: UserCheck, label: 'Total Students', value: data.stats.totalStudents.toString(), change: '+234', color: 'text-green-500' },
+                    { icon: Calendar, label: 'Total Bookings', value: data.stats.totalBookings.toString(), change: '+89', color: 'text-purple-500' },
+                    { icon: DollarSign, label: 'Revenue (MTD)', value: `$${data.stats.revenueMTD.toFixed(2)}`, change: '+18%', color: 'text-accent' },
                 ].map((stat, index) => (
                     <Card key={index}>
                         <CardContent className="p-6">
@@ -105,7 +129,7 @@ export default function AdminDashboard() {
                         <ResponsiveContainer width="100%" height={300}>
                             <PieChart>
                                 <Pie
-                                    data={coachData}
+                                    data={data.coachDistribution}
                                     cx="50%"
                                     cy="50%"
                                     labelLine={false}
@@ -114,7 +138,7 @@ export default function AdminDashboard() {
                                     fill="#8884d8"
                                     dataKey="value"
                                 >
-                                    {coachData.map((entry, index) => (
+                                    {data.coachDistribution.map((entry: any, index: number) => (
                                         <Cell key={`cell-${index}`} fill={entry.color} />
                                     ))}
                                 </Pie>
@@ -144,24 +168,20 @@ export default function AdminDashboard() {
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-4">
-                            {recentCoaches.map((coach) => (
+                            {data.recentCoaches.length > 0 ? data.recentCoaches.map((coach: any) => (
                                 <div key={coach.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
                                     <div>
                                         <p className="font-semibold">{coach.name}</p>
                                         <p className="text-sm text-muted-foreground">Rating: {coach.rating} • {coach.date}</p>
                                     </div>
                                     <div className="flex gap-2">
-                                        {coach.status === 'pending' ? (
-                                            <>
-                                                <Button variant="accent" size="sm">Approve</Button>
-                                                <Button variant="destructive" size="sm">Reject</Button>
-                                            </>
-                                        ) : (
-                                            <span className="text-sm text-green-600 font-semibold">Approved</span>
-                                        )}
+                                        <Button variant="accent" size="sm" onClick={() => handleApprove(coach.id)}>Approve</Button>
+                                        <Button variant="destructive" size="sm" onClick={() => handleReject(coach.id)}>Reject</Button>
                                     </div>
                                 </div>
-                            ))}
+                            )) : (
+                                <p className="text-sm text-muted-foreground py-4 text-center">No pending approvals.</p>
+                            )}
                         </div>
                     </CardContent>
                 </Card>
@@ -177,7 +197,7 @@ export default function AdminDashboard() {
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-4">
-                            {recentBookings.map((booking) => (
+                            {data.recentBookings.length > 0 ? data.recentBookings.map((booking: any) => (
                                 <div key={booking.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
                                     <div>
                                         <p className="font-semibold">{booking.student}</p>
@@ -192,7 +212,9 @@ export default function AdminDashboard() {
                                         </span>
                                     </div>
                                 </div>
-                            ))}
+                            )) : (
+                                <p className="text-sm text-muted-foreground py-4 text-center">No recent bookings.</p>
+                            )}
                         </div>
                     </CardContent>
                 </Card>

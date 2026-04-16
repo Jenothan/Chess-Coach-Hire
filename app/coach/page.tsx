@@ -12,10 +12,19 @@ export default function CoachDashboard() {
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
 
-    // Hardcoded coach ID for now - in a real app, this would come from the logged-in user
-    const coachId = 'coach_alex_123';
+    // Get coach ID from localStorage or fallback to hardcoded (for existing mock system)
+    const [coachId, setCoachId] = useState<string>('coach_alex_123');
 
     useEffect(() => {
+        const storedUserId = localStorage.getItem('userId');
+        if (storedUserId) {
+            setCoachId(storedUserId);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (!coachId) return;
+
         async function fetchData() {
             setLoading(true);
             const result = await getCoachDashboardData(coachId);

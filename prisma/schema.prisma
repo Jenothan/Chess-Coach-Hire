@@ -11,6 +11,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -49,6 +50,7 @@ model Coach {
   bio          String?
   avatar       String?
   availability String   @default("Available")
+  status       String   @default("PENDING")
   
   bookings     Booking[]
 }

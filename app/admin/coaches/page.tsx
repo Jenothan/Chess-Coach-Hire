@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -15,63 +15,34 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-
-// Mock data for coaches
-const coaches = [
-    {
-        id: 1,
-        name: 'Grandmaster Alex',
-        email: 'alex@chess.com',
-        rating: 2500,
-        specialty: 'Openings',
-        status: 'Active',
-        students: 12,
-        joinedDate: '2023-01-15',
-    },
-    {
-        id: 2,
-        name: 'IM Sarah Jones',
-        email: 'sarah@chess.com',
-        rating: 2350,
-        specialty: 'Endgames',
-        status: 'Active',
-        students: 8,
-        joinedDate: '2023-03-10',
-    },
-    {
-        id: 3,
-        name: 'FM David Chen',
-        email: 'david@chess.com',
-        rating: 2280,
-        specialty: 'Tactics',
-        status: 'Pending',
-        students: 0,
-        joinedDate: '2023-11-05',
-    },
-    {
-        id: 4,
-        name: 'WGM Elena Petrova',
-        email: 'elena@chess.com',
-        rating: 2410,
-        specialty: 'Strategy',
-        status: 'Suspended',
-        students: 15,
-        joinedDate: '2022-11-20',
-    },
-    {
-        id: 5,
-        name: 'CM Mark Wilson',
-        email: 'mark@chess.com',
-        rating: 2150,
-        specialty: 'Middlegame',
-        status: 'Active',
-        students: 5,
-        joinedDate: '2023-06-18',
-    },
-];
+import { getCoachesData, updateCoachStatus } from '@/lib/actions/adminActions';
 
 export default function CoachesPage() {
     const [searchTerm, setSearchTerm] = useState('');
+    const [coaches, setCoaches] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    const fetchCoaches = async () => {
+        try {
+            const data = await getCoachesData();
+            setCoaches(data);
+        } catch (error) {
+            console.error("Error fetching coaches:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchCoaches();
+    }, []);
+
+    const handleStatusUpdate = async (coachId: string, status: string) => {
+        const result = await updateCoachStatus(coachId, status);
+        if (result.success) {
+            fetchCoaches();
+        }
+    };
 
     const filteredCoaches = coaches.filter(coach =>
         coach.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -80,13 +51,16 @@ export default function CoachesPage() {
     );
 
     const getStatusColor = (status: string) => {
-        switch (status) {
-            case 'Active': return 'bg-green-500/15 text-green-700 dark:text-green-400 hover:bg-green-500/25/15';
-            case 'Pending': return 'bg-yellow-500/15 text-yellow-700 dark:text-yellow-400 hover:bg-yellow-500/25';
-            case 'Suspended': return 'bg-red-500/15 text-red-700 dark:text-red-400 hover:bg-red-500/25';
+        switch (status.toUpperCase()) {
+            case 'ACTIVE': return 'bg-green-500/15 text-green-700 dark:text-green-400 hover:bg-green-500/25/15';
+            case 'PENDING': return 'bg-yellow-500/15 text-yellow-700 dark:text-yellow-400 hover:bg-yellow-500/25';
+            case 'SUSPENDED': return 'bg-red-500/15 text-red-700 dark:text-red-400 hover:bg-red-500/25';
+            case 'REJECTED': return 'bg-gray-500/15 text-gray-700 dark:text-gray-400';
             default: return 'bg-gray-500/15 text-gray-700 dark:text-gray-400';
         }
     };
+
+    if (loading) return <div className="p-8 text-center">Loading coaches...</div>;
 
     return (
         <div className="space-y-6">
@@ -166,17 +140,17 @@ export default function CoachesPage() {
                                                         <DropdownMenuItem>View details</DropdownMenuItem>
                                                         <DropdownMenuItem>View students</DropdownMenuItem>
                                                         <DropdownMenuSeparator />
-                                                        {coach.status === 'Pending' && (
-                                                            <DropdownMenuItem className="text-green-600">
+                                                        {coach.status.toUpperCase() === 'PENDING' && (
+                                                            <DropdownMenuItem className="text-green-600" onClick={() => handleStatusUpdate(coach.id, 'ACTIVE')}>
                                                                 <CheckCircle className="mr-2 h-4 w-4" /> Approve
                                                             </DropdownMenuItem>
                                                         )}
-                                                        {coach.status !== 'Suspended' ? (
-                                                            <DropdownMenuItem className="text-red-600">
+                                                        {coach.status.toUpperCase() !== 'SUSPENDED' ? (
+                                                            <DropdownMenuItem className="text-red-600" onClick={() => handleStatusUpdate(coach.id, 'SUSPENDED')}>
                                                                 <XCircle className="mr-2 h-4 w-4" /> Suspend
                                                             </DropdownMenuItem>
                                                         ) : (
-                                                            <DropdownMenuItem className="text-green-600">
+                                                            <DropdownMenuItem className="text-green-600" onClick={() => handleStatusUpdate(coach.id, 'ACTIVE')}>
                                                                 <CheckCircle className="mr-2 h-4 w-4" /> Reactivate
                                                             </DropdownMenuItem>
                                                         )}

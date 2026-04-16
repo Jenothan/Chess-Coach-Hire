@@ -43,7 +43,8 @@ export async function registerUser(data: any) {
                     location: "Not specified",
                     experience: "New coach",
                     specialties: ["General"],
-                    languages: ["English"]
+                    languages: ["English"],
+                    status: "PENDING"
                 }
             });
         } else if (role === 'student') {
@@ -78,7 +79,29 @@ export async function loginUser(data: any) {
         }
 
         // 2. Verify password
-        const isPasswordValid = await bcrypt.compare(password, user.password || "");
+        let isPasswordValid = false;
+
+        if (user.password) {
+            // First try bcrypt comparison
+            isPasswordValid = await bcrypt.compare(password, user.password);
+
+            // If bcrypt fails, check if it's a plain text match
+            // We only do this if the stored password doesn't look like a bcrypt hash
+            // (Bcrypt hashes start with $2a$, $2b$, or $2y$)
+            if (!isPasswordValid && !user.password.startsWith('$2')) {
+                if (password === user.password) {
+                    isPasswordValid = true;
+
+                    // Automatically hash and update the password in DB
+                    console.log(`Auto-hashing plain text password for user: ${email}`);
+                    const newHashedPassword = await bcrypt.hash(password, 10);
+                    await prisma.user.update({
+                        where: { id: user.id },
+                        data: { password: newHashedPassword }
+                    });
+                }
+            }
+        }
 
         if (!isPasswordValid) {
             return { success: false, error: "Invalid email or password" };

@@ -76,7 +76,10 @@ async function main() {
                 email: data.email,
                 role: 'COACH',
                 coachProfile: {
-                    create: data.coach
+                    create: {
+                        ...data.coach,
+                        status: 'ACTIVE'
+                    }
                 }
             }
         })
